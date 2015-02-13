@@ -1,10 +1,34 @@
 __author__ = 'dbaskette'
 
 import argparse
-import os,subprocess
+import os
 import shutil
+
 import vagrant
-import ssh
+from pysphere import VIServer
+from pysphere import VIProperty
+
+
+def getDatastores(clusterPath):
+    with open("./Vagrantfile.master", "r") as vagrantfile:
+        for line in vagrantfile:
+            if "vsphere.host" in line:
+                vsphereIP = (line.split("=")[1]).lstrip(" ").replace("'", "").rstrip()
+            if "vsphere.user" in line:
+                vsphereUser = (line.split("=")[1]).lstrip(" ").replace("'", "").rstrip()
+            if "vsphere.password" in line:
+                vspherePassword = (line.split("=")[1]).lstrip(" ").replace("'", "").rstrip()
+    server = VIServer()
+    server.connect(vsphereIP, vsphereUser, vspherePassword)
+
+    datastores = []
+    for datastore in server.get_datastores():
+        props = VIProperty(server, datastore)
+        if props.host and props.summary.accessible == True:
+            datastores.append(props.info.name)
+    return datastores
+
+
 
 def cliParse():
     VALID_ACTION = ["create","delete"]
@@ -34,8 +58,10 @@ def create(clusterDictionary):
     shutil.copy("metadata.json",clusterPath)
     shutil.copy("gpssh-exkeys",clusterPath)
 
+    datastores = getDatastores(clusterPath)
 
     with open (clusterPath+"/Vagrantfile","w") as vagrantfile:
+        vagrantfile.write("DATASTORES=" + str(datastores))
         with open("./Vagrantfile.master") as master:
             for line in master:
                 if "$CLUSTERNAME" in line:
@@ -76,9 +102,6 @@ def create(clusterDictionary):
 
 #def sharekeys(nodes,clustername):
  #   print "sharekeys"
-
-
-
 
 
 def delete(clusterDictionary):

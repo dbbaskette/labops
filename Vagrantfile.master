@@ -11,7 +11,9 @@ Vagrant.configure("2") do |config|
 	clusterhosts = File.open(cluster_name+".hosts","w")
 
 
-  	(1..cluster_nodes).each do |i|  		
+  	(1..cluster_nodes).each do |i|
+  		datastore = DATASTORES[rand(DATASTORES.length)]
+
 		host_name = cluster_name+"#{i}"
 		fqdn = host_name+".localdomain"
 		vm_name = cluster_name+"#{i}"	
@@ -19,21 +21,24 @@ Vagrant.configure("2") do |config|
     	config.vm.define vm_name do |node|
     		node.hostmanager.aliases = host_name
     		node.vm.host_name=fqdn
-			node.ssh.username = "Enter template root user"
-    		node.ssh.password = "Enter template vm root user password"
+			node.ssh.username = "XX"
+    		node.ssh.password = "XX"
     		
   			node.vm.provider :vsphere do |vsphere|
-    			vsphere.host = "Enter vCenter IP"
-    			vsphere.compute_resource_name = 'Enter Cluster Name'
-    			vsphere.resource_pool_name = 'Enter a Resource Pool Name - Must be pre-created'
-    			vsphere.template_name = 'Enter a template name'
-    			vsphere.user = 'Enter vCenter User'
-    			vsphere.password = 'Enter Password'
+    			vsphere.host = 'XX'
+    			vsphere.compute_resource_name = 'XX'
+    			vsphere.resource_pool_name = 'XX'
+    			vsphere.template_name = 'XX'
+    			vsphere.user = 'XX'
+    			vsphere.password = 'XX'
     			vsphere.insecure = true
-    			vsphere.name = vm_name  		
-    			vsphere.memory_mb = "8192"
-    			vsphere.cpu_count = "2"
-			end	
+    			vsphere.name = vm_name
+    			vsphere.memory_mb = "32768"
+    			vsphere.cpu_count = "16"
+    			vsphere.data_store_name = datastore
+    			puts vsphere.data_store_name
+			end
+
 			
   		end
    end
